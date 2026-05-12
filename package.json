@@ -1,0 +1,14 @@
+﻿{
+  "name": "codex-session-manager",
+  "version": "1.0.0",
+  "description": "Codex 本地对话管理器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "ws": "^8.18.0",
+    "chokidar": "^3.6.0"
+  }
+}

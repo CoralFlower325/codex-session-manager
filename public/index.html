@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codex 会话管理器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="bg-effects">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <div id="list-view" class="view active">
+      <header class="glass-header">
+        <h1>Codex 会话管理器</h1>
+        <div class="search-bar">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="search-input" placeholder="搜索对话...">
+        </div>
+      </header>
+
+      <div id="batch-toolbar" class="batch-toolbar hidden">
+        <span class="batch-count">已选择 0 项</span>
+        <button id="btn-batch-export" class="btn btn-secondary">导出选中</button>
+        <button id="btn-batch-delete" class="btn btn-danger">删除选中</button>
+        <button id="btn-select-all" class="btn btn-ghost">全选</button>
+        <button id="btn-deselect-all" class="btn btn-ghost">取消全选</button>
+      </div>
+
+      <div id="session-list" class="session-list"></div>
+    </div>
+
+    <div id="detail-view" class="view">
+      <header class="glass-header detail-header">
+        <button id="btn-back" class="btn btn-ghost" class="btn btn-ghost">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
+          返回
+</button>
+        <h2 id="detail-title"></h2>
+        <div class="detail-actions">
+          <button id="btn-export-md" class="btn btn-secondary" class="btn btn-secondary">导出 Markdown</button>
+          <button id="btn-export-json" class="btn btn-secondary" class="btn btn-secondary">导出 JSON</button>
+          <button id="btn-delete-single" class="btn btn-danger" class="btn btn-danger">删除</button>
+        </div>
+      </header>
+      <div id="message-list" class="message-list"></div>
+    </div>
+
+    <footer class="status-bar">
+      <div id="ws-status" class="ws-status">
+        <span class="ws-dot disconnected"></span>
+        <span class="ws-label">WebSocket 未连接</span>
+      </div>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+
+
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
+
+
