@@ -1266,3 +1266,89 @@ body {
   text-align: center;
   padding: var(--space-sm);
 }
+
+/* 用户头像 */
+.card-avatar {
+  position: absolute;
+  top: var(--space-xl);
+  left: var(--space-xl);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.15), rgba(0, 242, 254, 0.1));
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.session-card:hover .card-avatar {
+  transform: scale(1.08);
+}
+
+/* 调整卡片内容左边距以容纳头像 */
+.session-card .card-content {
+  margin-left: 52px;
+}
+
+/* 对话类型标签 */
+.card-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0, 242, 254, 0.15));
+  color: var(--color-ice);
+  border: 1px solid rgba(79, 172, 254, 0.25);
+}
+
+/* 展开区域子对话标题 */
+.subs-container::before {
+  content: '子代理对话';
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.sub-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 2px solid rgba(124, 58, 237, 0.4);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-left: var(--space-lg);
+}
+
+.sub-card:hover {
+  background: rgba(124, 58, 237, 0.08);
+  border-left-color: var(--color-purple);
+  transform: translateX(4px);
+}
+
+.sub-card-title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.sub-card-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}

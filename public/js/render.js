@@ -51,13 +51,21 @@ export function renderSessionList(sessions, container, options = {}) {
     const isSelected = selectedIds.has(session.id);
     const badgeLabel = session.source === 'archived' ? '已归档' : '活跃';
 
+    const typeBadge = session.type === 'main'
+      ? '<span class="card-type-badge">对话</span>'
+      : '';
+
     card.innerHTML = `
       <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
+      <div class="card-avatar">
+        <span class="avatar-icon">${session.type === 'main' ? '👤' : '🤖'}</span>
+      </div>
       <button class="card-rename-btn" title="重命名">✎</button>
       <button class="card-expand-btn" title="展开子对话">▸</button>
       <div class="card-content">
         <h3 class="card-title">${escapeHtml(session.title || '无标题')}</h3>
         <div class="card-meta">
+          ${typeBadge}
           <span class="card-date">${formatDate(session.date)}</span>
           <span class="card-size">${formatSize(session.size)}</span>
           <span class="card-badge ${session.source === 'archived' ? 'archived' : ''}">${badgeLabel}</span>
