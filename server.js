@@ -293,6 +293,67 @@ app.delete('/api/sessions/:id', async (req, res) => {
   }
 });
 
+
+// Rename session
+app.put('/api/sessions/:id/rename', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: '标题不能为空' });
+    }
+
+    // Read current index
+    const indexMap = await loadIndex();
+    const info = indexMap.get(id);
+
+    if (!info) {
+      const found = await findSessionFile(id);
+      if (!found) {
+        return res.status(404).json({ error: '会话不存在' });
+      }
+    }
+
+    // Update or add entry in session_index.jsonl
+    let lines = [];
+    try {
+      const raw = await fs.readFile(INDEX_FILE, "utf-8");
+      lines = raw.split("\n").filter(l => l.trim());
+    } catch {}
+
+    let found = false;
+    const updatedLines = lines.map(line => {
+      try {
+        const obj = JSON.parse(line);
+        if (obj.id === id) {
+          obj.thread_name = title.trim();
+          found = true;
+          return JSON.stringify(obj);
+        }
+      } catch {}
+      return line;
+    });
+
+    if (!found) {
+      updatedLines.push(JSON.stringify({ id, thread_name: title.trim(), updated_at: new Date().toISOString() }));
+    }
+
+    await fs.writeFile(INDEX_FILE, updatedLines.join("\n") + "\n", "utf-8");
+
+    const sessionFile = await findSessionFile(id);
+    const newIndexMap = await loadIndex();
+    const session = sessionFile
+      ? await buildSession(sessionFile.filePath, sessionFile.source, newIndexMap)
+      : { id, title: title.trim() };
+
+    broadcast({ type: 'session_updated', data: session });
+    res.json(session);
+  } catch (err) {
+    console.error('PUT /api/sessions/:id/rename error:', err);
+    res.status(500).json({ error: '重命名失败' });
+  }
+});
+
 // Batch delete
 app.post('/api/sessions/batch-delete', async (req, res) => {
   try {

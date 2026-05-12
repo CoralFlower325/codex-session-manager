@@ -38,7 +38,15 @@ export const api = {
     return request(`/api/sessions/${encodeURIComponent(id)}/export?format=${encodeURIComponent(format)}`);
   },
 
+  async renameSession(id, title) {
+    return request(/api/sessions/$ + {encodeURIComponent(id)}/rename, {
+      method: 'PUT',
+      body: JSON.stringify({ title }),
+    });
+  },
+
   async search(query) {
     return request(`/api/search?q=${encodeURIComponent(query)}`);
   },
 };
+

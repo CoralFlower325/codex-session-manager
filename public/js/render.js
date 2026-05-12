@@ -47,6 +47,7 @@ export function renderSessionList(sessions, container, options = {}) {
 
     card.innerHTML = `
       <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
+      <button class="card-rename-btn" title="重命名">✎</button>
       <div class="card-content">
         <h3 class="card-title">${escapeHtml(session.title || '无标题')}</h3>
         <div class="card-meta">

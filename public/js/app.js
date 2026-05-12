@@ -174,6 +174,30 @@ async function handleExport(format) {
   }
 }
 
+
+// ─── Rename ──────────────────────────────────────────────────────────────────
+
+async function handleRename(session) {
+  const currentTitle = session.title || '';
+  const newTitle = prompt('输入新标题:', currentTitle);
+  if (newTitle === null || newTitle.trim() === '' || newTitle.trim() === currentTitle) return;
+
+  try {
+    await api.renameSession(session.id, newTitle.trim());
+    session.title = newTitle.trim();
+    // Update in state
+    const idx = state.sessions.findIndex(s => s.id === session.id);
+    if (idx !== -1) state.sessions[idx].title = newTitle.trim();
+    renderCurrentList();
+    if (state.currentView === 'detail' && state.currentSession && state.currentSession.id === session.id) {
+      state.currentSession.title = newTitle.trim();
+      if (els.detailTitle) els.detailTitle.textContent = newTitle.trim();
+    }
+    renderToast('已重命名', 'success');
+  } catch (err) {
+    renderToast('重命名失败: ' + err.message, 'error');
+  }
+}
 // ─── Search / Filter ────────────────────────────────────────────────────────
 
 function filterSessions() {
@@ -290,6 +314,14 @@ function bindEvents() {
     exportJsonBtn.addEventListener('click', () => handleExport('json'));
   }
 
+  // Rename from detail view
+  const renameBtn = document.querySelector('#btn-rename');
+  if (renameBtn) {
+    renameBtn.addEventListener('click', () => {
+      if (state.currentSession) handleRename(state.currentSession);
+    });
+  }
+
   // Single delete on detail view
   if (els.deleteBtn) {
     els.deleteBtn.addEventListener('click', async () => {
@@ -326,7 +358,12 @@ function bindEvents() {
       if (e.target.classList.contains('card-checkbox')) return;
       const id = card.dataset.id;
       const session = findSessionById(id);
-      if (session) handleDetail(session);
+      if (!session) return;
+      if (e.target.closest('.card-rename-btn')) {
+        handleRename(session);
+        return;
+      }
+      handleDetail(session);
     });
 
     els.sessionList.addEventListener('change', (e) => {
