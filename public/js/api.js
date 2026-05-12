@@ -1,13 +1,13 @@
-﻿const BASE_URL = 'http://localhost:3210';
+const BASE_URL = 'http://localhost:3210';
 
 async function request(url, options = {}) {
-  const response = await fetch(`${BASE_URL}${url}`, {
+  const response = await fetch(BASE_URL + url, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(`API Error ${response.status}: ${text || response.statusText}`);
+    throw new Error('API Error ' + response.status + ': ' + (text || response.statusText));
   }
   return response.json();
 }
@@ -18,11 +18,15 @@ export const api = {
   },
 
   async getSession(id) {
-    return request(`/api/sessions/${encodeURIComponent(id)}`);
+    return request('/api/sessions/' + encodeURIComponent(id));
+  },
+
+  async getSubSessions(id) {
+    return request('/api/sessions/' + encodeURIComponent(id) + '/subs');
   },
 
   async deleteSession(id) {
-    return request(`/api/sessions/${encodeURIComponent(id)}`, {
+    return request('/api/sessions/' + encodeURIComponent(id), {
       method: 'DELETE',
     });
   },
@@ -34,20 +38,19 @@ export const api = {
     });
   },
 
-  async exportSession(id, format = 'markdown') {
-    return request(`/api/sessions/${encodeURIComponent(id)}/export?format=${encodeURIComponent(format)}`);
-  },
-
   async renameSession(id, title) {
-    return request(`/api/sessions/${encodeURIComponent(id)}/rename`, {
+    return request('/api/sessions/' + encodeURIComponent(id) + '/rename', {
       method: 'PUT',
       body: JSON.stringify({ title }),
     });
   },
 
-  async getSubSessions(id) {\n    return request(/api/sessions//subs);\n  },\n\n  async search(query) {
-    return request(`/api/search?q=${encodeURIComponent(query)}`);
+  async exportSession(id, format) {
+    format = format || 'markdown';
+    return request('/api/sessions/' + encodeURIComponent(id) + '/export?format=' + encodeURIComponent(format));
+  },
+
+  async search(query) {
+    return request('/api/search?q=' + encodeURIComponent(query));
   },
 };
-
-

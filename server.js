@@ -88,6 +88,26 @@ async function countMessages(filePath) {
   return count;
 }
 
+
+/** Check if a session file contains user messages (main conversation indicator) */
+async function hasUserMessages(filePath) {
+  try {
+    const rl = readline.createInterface({
+      input: createReadStream(filePath, { encoding: "utf-8" }),
+      crlfDelay: Infinity,
+    });
+    for await (const line of rl) {
+      if (!line.trim()) continue;
+      try {
+        const obj = JSON.parse(line);
+        if (obj.type === "response_item" && obj.payload && obj.payload.role === "user") {
+          return true;
+        }
+      } catch {}
+    }
+  } catch {}
+  return false;
+}
 /** Build a session object from a file path and source label */
 async function buildSession(filePath, source, indexMap) {
   const filename = path.basename(filePath);
@@ -103,6 +123,8 @@ async function buildSession(filePath, source, indexMap) {
   const date = info.updated_at || stat.mtime.toISOString();
 
   const messageCount = await countMessages(filePath);
+
+  // Type is determined later in getAllSessions after all sessions are loaded
 
   return {
     id,
@@ -172,10 +194,25 @@ async function getAllSessions() {
     scanDir(ARCHIVED_DIR, 'archived', indexMap),
   ]);
   const all = [...active, ...archived];
-  // Mark main vs sub
+
+  // Determine main vs sub: sessions in index are main;
+  // sessions NOT in index are sub if they overlap in time (within 2h) with a main session
+  const mainSessions = all.filter(s => indexMap.has(s.id));
+  const mainTimeRanges = mainSessions.map(s => {
+    const t = new Date(s.date).getTime();
+    return { start: t - 2 * 60 * 60 * 1000, end: t + 2 * 60 * 60 * 1000 };
+  });
+
   for (const s of all) {
-    s.type = indexMap.has(s.id) ? 'main' : 'sub';
+    if (indexMap.has(s.id)) {
+      s.type = 'main';
+    } else {
+      const t = new Date(s.date).getTime();
+      const overlaps = mainTimeRanges.some(r => t >= r.start && t <= r.end);
+      s.type = overlaps ? 'sub' : 'main';
+    }
   }
+
   return all;
 }
 
