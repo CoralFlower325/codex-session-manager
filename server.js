@@ -453,6 +453,32 @@ app.get('/api/search', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+
+// SSE (Server-Sent Events) fallback for browsers that block WebSocket
+const sseClients = new Set();
+
+app.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  res.write('event: connected\ndata: {"type":"connected"}\n\n');
+
+  sseClients.add(res);
+  req.on('close', () => sseClients.delete(res));
+});
+
+function broadcastSSE(message) {
+  const data = JSON.stringify(message);
+  for (const client of sseClients) {
+    try {
+      client.write('event: message\ndata: ' + data + '\n\n');
+    } catch {}
+  }
+}
+
 // WebSocket
 // ---------------------------------------------------------------------------
 const wss = new WebSocketServer({ server });
@@ -466,6 +492,7 @@ wss.on('connection', (ws) => {
 });
 
 function broadcast(message) {
+  broadcastSSE(message);
   const payload = JSON.stringify(message);
   for (const ws of clients) {
     if (ws.readyState === 1) {
