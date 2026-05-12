@@ -89,34 +89,35 @@ export function renderSessionList(sessions, container, options = {}) {
 
 export function renderMessages(messages, container) {
   if (!messages || messages.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📭</div>
-        <p class="empty-text">暂无消息</p>
-      </div>`;
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p class="empty-text">暂无消息</p></div>';
     return;
   }
-
   container.innerHTML = '';
-
   messages.forEach((msg, i) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = `message ${msg.role}`;
-    wrapper.style.animationDelay = `${i * 80}ms`;
-
-    const time = msg.timestamp ? formatDate(msg.timestamp) : '';
-
-    wrapper.innerHTML = `
-      <div class="message-bubble glass">
-        <div class="message-content">${escapeHtml(msg.content || '')}</div>
-        <div class="message-time">${time}</div>
-      </div>`;
-
+    const role = msg.role || "assistant";
+    if (role === "developer" && (!msg.content || msg.content.trim().length < 10)) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "message " + role;
+    wrapper.style.animationDelay = (i * 80) + "ms";
+    const time = msg.timestamp ? formatDate(msg.timestamp) : "";
+    let roleLabel = "";
+    let content = msg.content || "";
+    if (role === "user") {
+      roleLabel = '<div class="message-role">你</div>';
+    } else if (role === "developer") {
+      roleLabel = '<div class="message-role">系统</div>';
+      if (content.length > 500) content = content.substring(0, 500) + "...";
+    } else {
+      roleLabel = '<div class="message-role">Codex</div>';
+    }
+    let dc = escapeHtml(content);
+    dc = dc.replace(/<image>.*?<\/image>/g, "[图片]");
+    wrapper.innerHTML = '<div class="message-bubble glass">' + roleLabel +
+      '<div class="message-content">' + dc + '</div>' +
+      '<div class="message-time">' + time + '</div></div>';
     container.appendChild(wrapper);
   });
 }
-
-// ─── renderToast ─────────────────────────────────────────────────────────────
 
 export function renderToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
