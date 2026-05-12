@@ -97,13 +97,9 @@ export class WebSocketClient {
       });
 
       this._evtSource.onerror = () => {
-        console.error('[SSE] Connection error');
-        if (this._onMessage) {
-          this._onMessage({ type: 'ws_disconnected', data: null });
-        }
-        if (this._shouldReconnect) {
-          this._scheduleReconnect();
-        }
+        console.error('[SSE] Connection error, trying polling');
+        this._pollingActive = true;
+        this._connectPolling();
       };
     } catch (err) {
       console.error('[SSE] Failed to create EventSource:', err);
@@ -127,6 +123,11 @@ export class WebSocketClient {
       this._evtSource.close();
       this._evtSource = null;
     }
+    if (this._pollInterval) {
+      clearInterval(this._pollInterval);
+      this._pollInterval = null;
+    }
+    this._pollingActive = false;
   }
 
   isConnected() {
@@ -134,6 +135,32 @@ export class WebSocketClient {
       return this._evtSource !== null && this._evtSource.readyState === EventSource.OPEN;
     }
     return this._ws !== null && this._ws.readyState === WebSocket.OPEN;
+  }
+
+
+  _connectPolling() {
+    console.log('[Poll] Starting polling fallback');
+    this._pollingActive = true;
+    this._pollTimestamp = 0;
+    if (this._onMessage) {
+      this._onMessage({ type: 'ws_connected', data: null });
+    }
+    this._pollInterval = setInterval(async () => {
+      if (!this._pollingActive) return;
+      try {
+        const res = await fetch('http://localhost:3210/api/poll?since=' + this._pollTimestamp);
+        const data = await res.json();
+        if (data.changed) {
+          this._pollTimestamp = data.timestamp;
+          // Refetch sessions to get latest data
+          if (this._onMessage) {
+            this._onMessage({ type: 'session_updated', data: { _pollRefresh: true } });
+          }
+        }
+      } catch (err) {
+        console.error('[Poll] Error:', err);
+      }
+    }, 3000);
   }
 
   _scheduleReconnect() {

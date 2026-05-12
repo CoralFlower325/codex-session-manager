@@ -454,6 +454,17 @@ app.get('/api/search', async (req, res) => {
 
 // ---------------------------------------------------------------------------
 
+// Track last change time for polling fallback
+let lastChangeTimestamp = Date.now();
+
+app.get('/api/poll', (req, res) => {
+  const since = parseInt(req.query.since) || 0;
+  if (since >= lastChangeTimestamp) {
+    return res.json({ changed: false });
+  }
+  res.json({ changed: true, timestamp: lastChangeTimestamp });
+});
+
 // SSE (Server-Sent Events) fallback for browsers that block WebSocket
 const sseClients = new Set();
 
@@ -471,6 +482,7 @@ app.get('/api/events', (req, res) => {
 });
 
 function broadcastSSE(message) {
+  lastChangeTimestamp = Date.now();
   const data = JSON.stringify(message);
   for (const client of sseClients) {
     try {

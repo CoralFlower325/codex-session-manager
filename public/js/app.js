@@ -263,6 +263,15 @@ function handleWsEvent(event) {
     case 'session_updated': {
       const updated = event.data;
       if (!updated) break;
+      // Polling detected changes - refetch full list
+      if (updated._pollRefresh) {
+        try {
+          const freshSessions = await api.getSessions();
+          state.sessions = Array.isArray(freshSessions) ? freshSessions : [];
+          filterSessions();
+        } catch {}
+        break;
+      }
       const idx = state.sessions.findIndex((s) => s.id === updated.id);
       if (idx !== -1) {
         state.sessions[idx] = { ...state.sessions[idx], ...updated };
