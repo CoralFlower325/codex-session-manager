@@ -39,14 +39,15 @@ export const api = {
   },
 
   async renameSession(id, title) {
-    return request(/api/sessions/$ + {encodeURIComponent(id)}/rename, {
+    return request(`/api/sessions/${encodeURIComponent(id)}/rename`, {
       method: 'PUT',
       body: JSON.stringify({ title }),
     });
   },
 
-  async search(query) {
+  async getSubSessions(id) {\n    return request(/api/sessions//subs);\n  },\n\n  async search(query) {
     return request(`/api/search?q=${encodeURIComponent(query)}`);
   },
 };
+
 

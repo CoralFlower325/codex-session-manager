@@ -1186,3 +1186,83 @@ body {
   color: var(--color-ice);
   transform: scale(1.1);
 }
+
+/* 展开按钮 */
+.card-expand-btn {
+  position: absolute;
+  top: var(--space-lg);
+  right: 72px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--bg-glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.session-card:hover .card-expand-btn {
+  opacity: 1;
+}
+
+.card-expand-btn:hover {
+  background: rgba(79, 172, 254, 0.15);
+  border-color: rgba(79, 172, 254, 0.3);
+  color: var(--color-ice);
+}
+
+.session-card.expanded .card-expand-btn {
+  transform: rotate(90deg);
+}
+
+/* 子对话容器 */
+.subs-container {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--bg-glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  animation: bubble-enter 0.3s ease-out;
+}
+
+.sub-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sub-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(79, 172, 254, 0.2);
+}
+
+.sub-card-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.sub-card-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.subs-loading,
+.subs-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-sm);
+}

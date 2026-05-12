@@ -51,10 +51,19 @@ const els = {
   get detailTitle() { return $('#detail-title'); },
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Helpers
+function formatSize(bytes) {
+  if (bytes == null || bytes === 0) return '0B';
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+}
+ ────────────────────────────────────────────────────────────────
 
 function getVisibleSessions() {
-  return state.searchQuery ? state.filteredSessions : state.sessions;
+  const all = state.searchQuery ? state.filteredSessions : state.sessions;
+  // Only show main sessions in the list
+  return all.filter(s => s.type === 'main');
 }
 
 function findSessionById(id) {
@@ -198,6 +207,47 @@ async function handleRename(session) {
     renderToast('重命名失败: ' + err.message, 'error');
   }
 }
+
+// ─── Sub-sessions expand ────────────────────────────────────────────────────
+
+async function handleExpandSubs(card, session) {
+  const existingSubs = card.querySelector('.subs-container');
+  if (existingSubs) {
+    existingSubs.remove();
+    card.classList.remove('expanded');
+    return;
+  }
+
+  card.classList.add('expanded');
+  const subsDiv = document.createElement('div');
+  subsDiv.className = 'subs-container';
+  subsDiv.innerHTML = '<div class="subs-loading">加载中...</div>';
+  card.appendChild(subsDiv);
+
+  try {
+    const subs = await api.getSubSessions(session.id);
+    if (!subs || subs.length === 0) {
+      subsDiv.innerHTML = '<div class="subs-empty">暂无子代理对话</div>';
+      return;
+    }
+    subsDiv.innerHTML = '';
+    subs.forEach(sub => {
+      const subCard = document.createElement('div');
+      subCard.className = 'sub-card';
+      subCard.dataset.id = sub.id;
+      const time = sub.date ? new Date(sub.date).toLocaleString('zh-CN') : '';
+      subCard.innerHTML = '<div class="sub-card-title">' + (sub.title || '未命名对话') + '</div>' +
+        '<div class="sub-card-meta">' + time + ' · ' + formatSize(sub.size) + ' · ' + sub.messageCount + ' 条消息</div>';
+      subCard.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleDetail(sub);
+      });
+      subsDiv.appendChild(subCard);
+    });
+  } catch (err) {
+    subsDiv.innerHTML = '<div class="subs-empty">加载失败</div>';
+  }
+}
 // ─── Search / Filter ────────────────────────────────────────────────────────
 
 function filterSessions() {
@@ -265,11 +315,13 @@ function handleWsEvent(event) {
       if (!updated) break;
       // Polling detected changes - refetch full list
       if (updated._pollRefresh) {
-        try {
-          const freshSessions = await api.getSessions();
-          state.sessions = Array.isArray(freshSessions) ? freshSessions : [];
-          filterSessions();
-        } catch {}
+        (async () => {
+          try {
+            const freshSessions = await api.getSessions();
+            state.sessions = Array.isArray(freshSessions) ? freshSessions : [];
+            filterSessions();
+          } catch {}
+        })();
         break;
       }
       const idx = state.sessions.findIndex((s) => s.id === updated.id);
@@ -370,6 +422,10 @@ function bindEvents() {
       if (!session) return;
       if (e.target.closest('.card-rename-btn')) {
         handleRename(session);
+        return;
+      }
+      if (e.target.closest('.card-expand-btn')) {
+        handleExpandSubs(card, session);
         return;
       }
       handleDetail(session);

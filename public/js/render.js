@@ -1,8 +1,14 @@
 ﻿function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
   const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 function formatSize(bytes) {
@@ -48,6 +54,7 @@ export function renderSessionList(sessions, container, options = {}) {
     card.innerHTML = `
       <input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''}>
       <button class="card-rename-btn" title="重命名">✎</button>
+      <button class="card-expand-btn" title="展开子对话">▸</button>
       <div class="card-content">
         <h3 class="card-title">${escapeHtml(session.title || '无标题')}</h3>
         <div class="card-meta">

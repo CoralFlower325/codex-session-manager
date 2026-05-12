@@ -100,9 +100,7 @@ async function buildSession(filePath, source, indexMap) {
   }
   const info = indexMap.get(id) || {};
   const title = info.thread_name || '未命名对话';
-  const date = info.updated_at
-    ? info.updated_at.slice(0, 10)
-    : stat.mtime.toISOString().slice(0, 10);
+  const date = info.updated_at || stat.mtime.toISOString();
 
   const messageCount = await countMessages(filePath);
 
@@ -146,6 +144,26 @@ async function scanDir(dir, source, indexMap) {
   return results.filter(Boolean);
 }
 
+
+/** Get IDs of sessions that have entries in session_index.jsonl */
+async function getMainSessionIds() {
+  const indexMap = await loadIndex();
+  return new Set(indexMap.keys());
+}
+
+/** Find sub-sessions for a main session by time overlap */
+async function findSubSessions(mainSession) {
+  const allSessions = await getAllSessions();
+  const mainTime = new Date(mainSession.date).getTime();
+  const mainIds = await getMainSessionIds();
+  // Sub sessions are those without index entries, created within ±2 hours of the main session
+  return allSessions.filter(s => {
+    if (mainIds.has(s.id)) return false;
+    const subTime = new Date(s.date).getTime();
+    const diff = Math.abs(subTime - mainTime);
+    return diff < 2 * 60 * 60 * 1000; // 2 hours
+  });
+}
 /** Get all sessions (active + archived) */
 async function getAllSessions() {
   const indexMap = await loadIndex();
@@ -153,7 +171,12 @@ async function getAllSessions() {
     scanDir(SESSIONS_DIR, 'active', indexMap),
     scanDir(ARCHIVED_DIR, 'archived', indexMap),
   ]);
-  return [...active, ...archived];
+  const all = [...active, ...archived];
+  // Mark main vs sub
+  for (const s of all) {
+    s.type = indexMap.has(s.id) ? 'main' : 'sub';
+  }
+  return all;
 }
 
 /** Find a session file by ID, return {filePath, source} or null */
@@ -293,6 +316,24 @@ app.delete('/api/sessions/:id', async (req, res) => {
   }
 });
 
+
+
+// Get sub-sessions for a main session
+app.get('/api/sessions/:id/subs', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const found = await findSessionFile(id);
+    if (!found) return res.status(404).json({ error: '会话不存在' });
+    const indexMap = await loadIndex();
+    const session = await buildSession(found.filePath, found.source, indexMap);
+    const subs = await findSubSessions(session);
+    subs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    res.json(subs);
+  } catch (err) {
+    console.error('GET /api/sessions/:id/subs error:', err);
+    res.status(500).json({ error: '获取子对话失败' });
+  }
+});
 
 // Rename session
 app.put('/api/sessions/:id/rename', async (req, res) => {
